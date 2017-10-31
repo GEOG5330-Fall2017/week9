@@ -89,12 +89,15 @@ response(xm)
 
 e <- evaluate(pres_test[,1:2], backg_test[,1:2], xm, clim)
 px <- predict(clim, xm, progress='')
-plot(px)
 
+par(mfrow=c(1,2))
+data(stateMapEnv)
+plot(px)
+map('state', fill=F, col='red',add=T)
 tr <- threshold(e, 'spec_sens')
 plot(px > tr, main='presence/absence')
 points(pres_train, pch='+')
-
+map('state', fill=F, col='red',add=T)
 ```
 
 # Question 2
