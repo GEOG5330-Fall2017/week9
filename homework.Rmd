@@ -76,8 +76,24 @@ jar
 ##  distribution and explain how. The sample codes can be found at the MaxEnt section of https://github.com/surfcao/geog5330-fall2017/blob/master/week9/sdm2.Rmd
 
 
+pres_train <- presence_bc[group_p != 2, ]
+pres_test <- presence_bc[group_p == 2, ]
 
+backg_train <- bg_bc[group_a != 1, ]
+backg_test <- bg_bc[group_a == 1, ]
 
+xm <- maxent(clim, p=pres_train[,1:2], a= backg_train[,1:2])
+
+plot(xm)
+response(xm)
+
+e <- evaluate(pres_test[,1:2], backg_test[,1:2], xm, clim)
+px <- predict(clim, xm, progress='')
+plot(px)
+
+tr <- threshold(e, 'spec_sens')
+plot(px > tr, main='presence/absence')
+points(pres_train, pch='+')
 
 ```
 
