@@ -1,5 +1,5 @@
 ---
-title: "Week 9 Homework"
+title: "Week 5 Homework"
 output: github_document
 ---
 
@@ -9,8 +9,7 @@ used for last week's homework and raster measurements of climate conditions
 ('ext5.grd') for the same area.  Please add your lines codes in the following
 snippets of the codes to address the question I put in the comments:
 
-
-```{r hw8, eval=T, echo=T}
+```{r hw5, eval=T, echo=T}
 # plot the trees 
 library(sp)
 library(maptools)
@@ -20,7 +19,7 @@ library(dismo)
 
 locs = read.csv(file="Data/trees2.csv", header=T)
 
-# Generate psuedo-absence tree locations as background data
+# The following codes are to generate psuedo-absence tree locations as background data
 
 coordinates(locs)=c('lngitude', 'latitude')
 proj4string(locs) = CRS('+init=epsg:4326')
@@ -28,53 +27,55 @@ proj4string(locs) = CRS('+init=epsg:4326')
 x = circles(coordinates(locs), d=50000, lonlat=T)
 bg = spsample(x@polygons, 1000, type='random', iter=1000)
 
-
-# load the climate conditions raster datasets
+# The following codes are to load the climate conditions raster datasets
 clim = brick('Data/ext5.grd')
 
 plot(clim, 1, cex=0.5, legend=T, mar=par("mar"), xaxt="n", yaxt="n", main="Annual mean temperature") 
 map("state", xlim=c(-119, -113), ylim=c(33.5, 38), fill=F, col="cornsilk", add=T)
 
-# presence of trees
+# Take a look at the presence and background data of trees
 points(locs, col='red')
 # psuedo-absense
 points(bg, col='blue')
 
-# extracting bioclim values for locations
+# The following codes are for extracting bioclim values for locations of
+# presences and psuedo-absense data
+
 presence_bc = extract(clim, coordinates(locs)) # for the presence points
 bg_bc = extract(clim, bg) # for the pseudo-absence points
 
-# put all the data including presence locations and related climate conditions into a data frame
+# Now, put all the data including presence locations and related climate conditions into a data frame
 presence_bc = data.frame(lon=coordinates(locs)[,1], lat=coordinates(locs)[,2], presence_bc)
 
-# do the same thing for background pseudo-absence data
+# And, do the same thing for background pseudo-absence data
 
 bg_bc = data.frame(lon=coordinates(bg)[,1], lat=coordinates(bg)[,2], bg_bc)
 
 length(which(is.na(bg_bc$bio1))) # double-check for missing data
 bg_bc = bg_bc[!is.na(bg_bc$bio1), ] # and pull out the missing values
 
-
 group_p = kfold(presence_bc, 5) # divide the presence data frame into 5 groups 
 group_a = kfold(bg_bc, 5) # same for bg_bc
 
-
-
+## We are almost ready to run the maxent. 
 ## To do this, you need to set up `maxent' method in the `dismo` package.
-## The maxent package can be downloaded from: http://biodiversityinformatics.amnh.org/open_source/maxent/. Unzip the downloaded tarball and copy the maxent.jar file to the
-# folder specified by the following 'jar'. You will also need to install the 'rJava' package. Then you should be ready to go. Please let me know if you have trouble installing this. 
+## The maxent package can be downloaded from:
+## https://github.com/surfcao/geog5330-fall2018/blob/master/week5/maxent.jar.
+## Download the downloaded the maxent.jar file and copy it to the # folder
+## specified by the following 'jar'. You will also need to install the 'rJava'
+## package. Then you should be ready to go. Please let me know if you have
+## trouble installing this. 
 
 jar <- paste(system.file(package="dismo"), "/java/maxent.jar", sep= '') 
 jar
 
-## Till this point, all the data prepreration has finished. Now your turn.
-##  Based on the kfold results, choose one group (say group 2) as your
+## Till this point, all the data preparation has finished. Now your turn.
+##  Based on the k-fold results, choose one group (say group 2) as your
 ##  validation dataset, and use the other four groups as your training
-##  data. Use MaxEnt to generate a presense probability map of Joushua
+##  data. Use MaxEnt to generate a presence probability map of Joshua
 ##  trees, plot it, output the accuracy measure. Please identify the
-##  climate conditions that affect the most to the Joushua tree
-##  distribution and explain how. The sample codes can be found at the MaxEnt section of https://github.com/surfcao/geog5330-fall2017/blob/master/week9/sdm2.Rmd
-
+##  climate conditions that affect the most to the Joshua tree
+##  distribution and explain how. The sample codes can be found at the MaxEnt ##  section of the sample codes used during the lecture.
 
 pres_train <- presence_bc[group_p != 2, ]
 pres_test <- presence_bc[group_p == 2, ]
@@ -82,31 +83,6 @@ pres_test <- presence_bc[group_p == 2, ]
 backg_train <- bg_bc[group_a != 1, ]
 backg_test <- bg_bc[group_a == 1, ]
 
-xm <- maxent(clim, p=pres_train[,1:2], a= backg_train[,1:2])
 
-plot(xm)
-response(xm)
 
-e <- evaluate(pres_test[,1:2], backg_test[,1:2], xm, clim)
-px <- predict(clim, xm, progress='')
-
-par(mfrow=c(1,2))
-data(stateMapEnv)
-plot(px)
-map('state', fill=F, col='red',add=T)
-tr <- threshold(e, 'spec_sens')
-plot(px > tr, main='presence/absence')
-points(pres_train, pch='+')
-map('state', fill=F, col='red',add=T)
 ```
-
-# Question 2
-
-Please sign up on Google Earth Engine at
-[https://signup.earthengine.google.com/#/](https://signup.earthengine.google.com/#/). We
-will need it for later part of the class, and it may take a while for
-Google to approve your request.
-
-
-
-
